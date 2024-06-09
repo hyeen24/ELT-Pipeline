@@ -290,9 +290,69 @@ RUN python -m venv dbt_venv && source dbt_venv/bin/activate && \
 ```
 make sure the directry of active is correct
 
+2. Update requirements.txt
+
+```
+astronomer-cosmos
+apache-airflow-providers-snowflake
+```
+
+3. Run astro
+
+```bash
+astro dev start
+```
+
+4. Copy whole working directory to DBT-DAG folder
+5. Update dbt_dag.py in dags
+
+```python
+import os 
+from datetime import datetime 
+from pathlib import Path 
+
+from cosmos import DbtDag, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos.profiles import SnowflakeUserPasswordProfileMapping 
 
 
+profile_config = ProfileConfig( 
+    profile_name="default", 
+    target_name="dev", 
+    profile_mapping=SnowflakeUserPasswordProfileMapping( 
+        conn_id="snowflake_conn", 
+        profile_args={"database":"dbt_db","schema":"dbt_schema"}, 
+    ), 
+) 
 
+# [START local_example] 
+basic_cosmos_dag = DbtDag( 
+    # dbt/cosmos-specific parameters 
+    project_config=ProjectConfig("/usr/local/airflow/dags/dbt/data_pipeline",), 
+    operator_args={ 
+        "install_deps": True  # install any necessary dependencies before running any dbt command 
+    }, 
+    profile_config=profile_config,
+    
+    execution_config=ExecutionConfig(
+        dbt_executable_path=f"{os.environ['AIRFLOW_HOME']}/dbt_venv/bin/dbt",
+    ), 
+    
+    # normal dag parameters 
+    schedule_interval="@daily", 
+    start_date=datetime(2023, 1, 1), 
+    catchup=False, 
+    dag_id="dbt_dag", 
+) 
+```
+6. Open up browser and go to ```localhost:8080```
+7. enter admin as id and password
+8. Update connection ```Admin > Connections```
+9. Enter connection id as ```snowflake_conn```
+10. Select connection type as snowflake
+11. Fill up ```Login``` ```Password``` ```Account``` ```Warehouse``` ```Database``` ```Role```
+12. Go to DAGs and run dbt_dag
+
+![istockphoto-1451590744-612x612](https://github.com/hyeen24/ELT-pipeline/assets/81229303/95387cea-b6cf-46c2-9275-eaee68ad70eb)
 
 
 
