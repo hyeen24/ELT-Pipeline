@@ -1,7 +1,7 @@
 Overview
 ========
 
-This project stimulate a creation of an ELT pipeline.
+This project stimulate a creation of an ELT pipeline to Datawarehouse. For this case the source and destination will be snowflake. Lets begin!
 
 Technologies
 ================
