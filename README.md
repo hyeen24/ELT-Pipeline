@@ -5,7 +5,7 @@ This project stimulate a creation of an ELT pipeline.
 
 Technologies
 ================
-- Airflow  --> orchestration
+- Airflow (W/ ASTRO COSMOS) --> orchestration
 - Snowflake --> warehousing
 - dbt --> tranformation
 
