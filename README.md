@@ -114,8 +114,147 @@ dbt init
       version: 1.2.0
    ```
 6. Update dependancy with ```dbt deps``` in terminal
-![image](https://github.com/hyeen24/ELT-pipeline/assets/81229303/178dd3c3-99b6-404b-8b76-939558dac5e6)
-7. 
+   
+   <img src="https://github.com/hyeen24/ELT-pipeline/assets/81229303/178dd3c3-99b6-404b-8b76-939558dac5e6)" width="500" height="100">
+
+7. create a new file "tpch_sources.yml under staging folder
+```yml
+   version: 2
+
+   sources:
+     - name: tpch
+       database: snowflake_sample_data
+          schema: tpch_sf1
+          tables:
+            - name: orders
+              columns:
+                - name: o_orderkey
+                  tests: 
+                    - unique
+                    - not_null
+            - name: lineitem
+              columns:
+                - name: l_orderkey
+                  tests:
+                    - relationships:
+                        to: source('tpch','orders')
+                        field: o_orderkey
+         
+```
+
+9.  create a ```stg_orders.sql``` file in staging :
+
+```sql
+select
+    o_orderkey as order_key,
+    o_custkey as customer_key,
+    o_orderstatus as order_status,
+    o_totalprice as total_price,
+    o_orderdate as order_date
+from
+    {{ source('tpch','orders') }}     
+```
+
+11. test run the model with ```dbt run```
+
+10. create a ```stg_line_items.sql``` file in staging:
+
+```sql
+select
+    {{
+        dbt_utils.generate_surrogate_key([
+            'l_orderkey',
+            'l_linenumber'
+        ])
+    }} as order_item_key,
+    l_orderkey as order_key,
+    l_partkey as part_key,
+    l_linenumber as line_number,
+    l_quantity as quantity,
+    l_extendedprice as extended_price,
+    l_discount as discount_percentage,
+    l_tax as tax_rate
+from
+   {{ source('tpch','lineitem') }}
+```
+12. run the model with ```dbt run -s stg_line_items.sql``` to single model only 
+13. create a ```int_order_items.sql``` in marts:
+
+```sql
+select  
+    line_item.order_item_key,
+    line_item.part_key,
+    line_item.extended_price,
+    line_item.line_number,
+    orders.order_key,
+    orders.customer_key,
+    orders.order_date,
+      {{ discounted_amount('line_item.extended_price', 'line_item.discount_percentage') }} as item_discount_amount
+from 
+    {{ ref('stg_tpch_orders') }} as orders
+join
+    {{ reg('stg_tpch_line_items')} } as stg_tpch_line_items 
+        on orders.order_key = line_item.order_key
+order by 
+    orders.order_date
+```
+
+14. Testing with macros
+    create a file ```pricing.sql``` under macros
+ ```sql
+       {% macro discount_amount(extended_pice, dicount_percentage, scale=2) %}
+       (-1 * {{ extended_price }} * {{discount_percentage}})::numeric(16, {{ scale }})
+       {% endmacro %}
+ ```
+15. Create another file ```int_order_items_summary.sql```
+```sql
+select
+   order_key,
+   sum(extended_price) as gross_item_sales_amount,
+   sum(item_discount_amount) as item_discount_amount
+from
+   {{ ref('int_order_items') }}
+group by
+   order_key
+```
+
+16. Create a fact model ```fct_order.sql```
+```sql
+select
+   orders.*,
+   order_item_summary.gross_item_sales_amount,
+   order_item_summary.item_discount_amount
+from
+   {{ ref('stg_orders') }} as orders
+join
+   {{ ref('int_order_items_summary') }} as order_item_summary
+      on orders.order_key = order_item_summary.order_key
+order by
+   order_date
+```
+
+17. run each model and troubleshoot for any error (It should reflect in snowflake)
+
+<h3> Writing test </h3>
+1. create a ```tests.yml``` file in marts (Generic test)
+```yml
+models:
+   - name: fct_orders
+     columns:
+         - name: order_key
+           test:
+             - unique
+             - not_null
+             - relationship:
+                to: ref('stg_orders')
+                field: order_key
+                severity: warn
+         - name: status_code
+           tests:
+             - accepted_values:
+                 values: ['P', 'O', 'F']
+```
+
 
 xx
 =======
