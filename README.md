@@ -1,7 +1,7 @@
 Overview
 ========
 
-This project stimulate a creation in ELT pipeline.
+This project stimulate a creation of an ELT pipeline.
 
 Technology
 ================
