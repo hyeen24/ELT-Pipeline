@@ -42,7 +42,7 @@ python -m pip install dbt-core dbt-snowflake
 use role accountadmin;
 
 #Create warehouse
-create warehouse dbt_wh;
+create warehouse dbt_wh with warehouse_size='x-small;
 
 #Create database
 create database dbt_db;
