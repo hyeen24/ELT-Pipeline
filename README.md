@@ -37,7 +37,7 @@ python -m pip install dbt-core dbt-snowflake
 1. [Register an account](https://signup.snowflake.com/?utm_source=google&utm_medium=paidsearch&utm_campaign=ap-sg-en-brand-core-exact&utm_content=go-eta-evg-ss-free-trial&utm_term=c-g-snowflake-e&_bt=562156041580&_bk=snowflake&_bm=e&_bn=g&_bg=125204683182&gclsrc=aw.ds&gad_source=1&gclid=CjwKCAjwgpCzBhBhEiwAOSQWQeBkaIHICqxGi-DEvMo-5aO8airs4iymD1IhQfcFyfIcZgvLMGcuexoCfeAQAvD_BwE)
 
 2. Setting up warehouse
-```bash
+```sql
 # Creating admin role (superuser)
 use role accountadmin;
 
@@ -93,7 +93,7 @@ dbt init
 2. Configure project and packages
 - update dbt_project.yml (Main reference file)
 
-```bash
+```yml
   #raw data from source file
   stagging: 
       +materialized: view
@@ -108,7 +108,7 @@ dbt init
 3. delete the example folder in models
 4. Add 2 new folder: ```stagging``` and ```mart```
 5. Add new packages.yml [Latest version](https://github.com/dbt-labs/dbt-utils/releases)
-   ```bash
+   ```yml
    packages:
     - package: dbt-labs/dbt_utils
       version: 1.2.0
