@@ -236,7 +236,9 @@ order by
 17. run each model and troubleshoot for any error (It should reflect in snowflake)
 
 <h3> Writing test </h3>
-1. create a ```tests.yml``` file in marts (Generic test)
+
+1. create  ```tests.yml``` file in marts (Generic test)
+
 ```yml
 models:
    - name: fct_orders
@@ -255,7 +257,42 @@ models:
                  values: ['P', 'O', 'F']
 ```
 
+2. Create ```fct_orders_discount.sql``` file in tests (singular test)
 
-xx
-=======
+```sql
+select
+   *
+from
+   {{ ref('fct_orders') }}
+where
+   item_discount_amount > 0
+```
+3. Create a date test ```fct_orders_date_valid.sql```
+
+```sql
+select
+   *
+from
+   {{ ref('fct_orders') }}
+where
+   date(order_date) > cURRENT_DATE()
+      or date(order_date) < date('2000-01-01')
+```
+
+<h3> Setting up airflow with cosmos </h3>  
+
+[Guide](https://github.com/hyeen24/ELT-pipeline/tree/main/.astro)
+
+1. After setting up, update docker file:
+```
+RUN python -m venv dbt_venv && source dbt_venv/bin/activate && \
+    pip install --no-cache-dir dbt-snowflake && deactivate
+```
+make sure the directry of active is correct
+
+
+
+
+
+
 
